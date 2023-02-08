@@ -1335,17 +1335,24 @@ def read_data(port_index):
   # print 'Data collection took ' + str(elapsed_time) + ' seconds'
   return current_datetime, battery_SOC, battery_current, battery_voltage, battery_power, AC_out_current, AC_out_voltage, AC_out_power
 
-_temp = r7000.read(1)
-print(_temp)
-_temp = r3011.read(1)
-print(_temp)
-_temp = r3000.read(1)
-print(_temp)
-_temp = r11000.read(1)
-print(_temp)
-_temp = r11004.read(1)
-print(_temp)
+def test_param():
+  _temp = r7000.read(1)
+  print(_temp)
+  _temp = r6057.read(1)
+  print(_temp)
+  _temp = r6018.read(1)
+  print(_temp)
+  _temp = r6024.read(1)
+  print(_temp)
+  _temp = r6025.read(1)
+  print(_temp)
+  _temp = r11000.read(1)
+  print(_temp)
+  _temp = r11004.read(1)
+  print(_temp)
 
+system_init(1)
+test_param()
 exit()
 
 def data_collection(port_index):
