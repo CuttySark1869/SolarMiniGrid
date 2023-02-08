@@ -31,9 +31,9 @@ from datetime import timedelta
 # ------------------------------------
 # paths
 cwd = os.getcwd()
-dir_scom = 'H:\\Profiles_Do_Not_Delete\\campus\\Desktop\\SoLa Kit\\scom.exe '
+dir_scom = 'scom.exe '
 # port
-port_name = ['COM0', 'COM1', 'COM2', 'COM3', 'COM4']
+port_name = ['COM3']
 # verbose
 verbose_num = 3
 # src addr
@@ -1007,8 +1007,7 @@ perform scom command to read system info and get data
 
 
 def read_info(cmd):
-  py2output =
-  .Popen(dir_scom + cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  py2output =subprocess.Popen(dir_scom + cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   str_output = py2output.stdout.readlines()
   if display_output:
     for line in str_output:
@@ -1050,8 +1049,8 @@ if chech_port:
 # --------------------------------
 # open serial port
 if open_port:
-  ser = serial.Serial('COM3', baudrate=38400)
-  print(ser.name)         # check which port was really used
+  ser = serial.Serial(port_name[0], baudrate=38400)
+  print('Serial Port ' + ser.name + ' Opened.')         # check which port was really used
 
 # 3.3 Test serial port connection and scom
 # -----------------------------------------
@@ -1064,7 +1063,6 @@ if test_comm:
 
 # 4 System Initialization
 # ------------------------
-
 
 def system_init(port_index):
   # Enable Xtender watchdog and diable saving parameters in flash drive
@@ -1308,6 +1306,10 @@ def read_data(port_index):
   # print 'Data collection took ' + str(elapsed_time) + ' seconds'
   return current_datetime, battery_SOC, battery_current, battery_voltage, battery_power, AC_out_current, AC_out_voltage, AC_out_power
 
+_temp = r7000.read(0)
+print(_temp)
+
+exit()
 
 def data_collection(port_index):
   current_datetime, battery_SOC, battery_current, \
