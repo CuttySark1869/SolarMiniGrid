@@ -33,7 +33,7 @@ from datetime import timedelta
 cwd = os.getcwd()
 dir_scom = 'scom.exe '
 # port
-port_name = ['COM3']
+port_name = ['COM2', 'COM3']
 # verbose
 verbose_num = 3
 # src addr
@@ -44,6 +44,8 @@ RCC_addr = 501
 BSP_addr = 601
 # Xtender addr
 XTM_addr = 101
+# Vtrack addr
+VTK_addr = 701
 # object_type and property ID
 # refer to section 4.4 in protocol specs
 user_info_object_object_type = 1
@@ -890,6 +892,12 @@ Xtender_info = [(3000, 'Battery voltage', 'FLOAT'),
                 (3162, 'Forced grid feeding active', 'SHORT ENUM')]
 Xtender_info = pd.DataFrame(Xtender_info, columns=labels)
 
+Vtrack_info = [(11000, 'Battery voltage', 'FLOAT'),
+               (11004, 'Power of the PV generator', 'FLOAT')]
+
+Vtrack_info = pd.DataFrame(Vtrack_info, columns=labels)
+print(Vtrack_info)
+
 # 2.4 Create Instances for Command Class
 # ---------------------------------------
 register_list = []
@@ -997,6 +1005,29 @@ for i in range(Xtender_info.shape[0]):
   tmp_cmd = ('{variable_name}.description = \'{description}\''.format(
       variable_name=tmp_class_name, description=tmp_description))
   exec(tmp_cmd)
+########################################################################################################
+# Vtrack info
+for i in range(Vtrack_info.shape[0]):
+  tmp_object_id = Vtrack_info.iloc[i].property_id
+  tmp_data_format = Vtrack_info.iloc[i].format
+  if tmp_data_format == 'LONG ENUM':
+    tmp_data_format = 'ENUM'
+  if tmp_data_format == 'SHORT ENUM':
+    tmp_data_format = 'ENUM'
+  tmp_description = Vtrack_info.iloc[i].description
+  tmp_class_name = 'r' + str(tmp_object_id)
+  register_list.append(tmp_class_name)
+  tmp_cmd = ('{variable_name} = ScomCommand({port_name},{verbose_num},{src_addr},'
+             '{dst_addr},{object_type},{object_id},{property_id},\'{data_format}\')'.
+             format(variable_name=tmp_class_name, port_name=port_name, verbose_num=verbose_num,
+                    src_addr=src_addr, dst_addr=VTK_addr, object_type=user_info_object_object_type,
+                    object_id=tmp_object_id, property_id=user_info_object_property_Id, data_format=tmp_data_format))
+  exec(tmp_cmd)
+  print(tmp_cmd)
+  tmp_cmd = ('{variable_name}.description = \'{description}\''.format(
+      variable_name=tmp_class_name, description=tmp_description))
+  exec(tmp_cmd)
+  print(tmp_cmd)
 
 # 2.5 Create Command Function
 # ----------------------------
@@ -1306,7 +1337,15 @@ def read_data(port_index):
   # print 'Data collection took ' + str(elapsed_time) + ' seconds'
   return current_datetime, battery_SOC, battery_current, battery_voltage, battery_power, AC_out_current, AC_out_voltage, AC_out_power
 
-_temp = r7000.read(0)
+_temp = r7000.read(1)
+print(_temp)
+_temp = r3011.read(1)
+print(_temp)
+_temp = r3000.read(1)
+print(_temp)
+_temp = r11000.read(1)
+print(_temp)
+_temp = r11004.read(1)
 print(_temp)
 
 exit()
