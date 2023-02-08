@@ -44,9 +44,9 @@ log.addHandler(h)
 # ------------------------------------
 # paths
 cwd = os.getcwd()
-dir_scom = 'H:\\Profiles_Do_Not_Delete\\campus\\Desktop\\SoLa Kit\\scom.exe '
+dir_scom = 'scom.exe '
 # port
-port_name = ['COM0', 'COM1', 'COM2', 'COM3', 'COM4']
+port_name = ['COM0', 'COM3']
 # verbose
 verbose_num = 3
 # src addr
@@ -98,7 +98,7 @@ battery_setting = 2
 # ---------------------------------
 conn = sqlite3.connect('StuderOpearion.db')
 c = conn.cursor()
-c = execute("""CREATE TABLE IF NOT EXISTS StuderOperation(
+c.execute("""CREATE TABLE IF NOT EXISTS StuderOperation(
               sample_time text,
               battery_SOC real,
               battery_current real,
@@ -1034,8 +1034,7 @@ perform scom command to read system info and get data
 
 
 def read_info(cmd):
-  py2output =
-  .Popen(dir_scom + cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  py2output = subprocess.Popen(dir_scom + cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   str_output = py2output.stdout.readlines()
   if display_output:
     for line in str_output:

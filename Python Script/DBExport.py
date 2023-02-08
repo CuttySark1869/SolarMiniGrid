@@ -1,6 +1,6 @@
 import sqlite3
 import pandas as pd
-conn = sqlite3.connect('../DataBase/StuderOperation2.db')
+conn = sqlite3.connect('StuderOpearion.db')
 
 Discharch1 = pd.read_sql_query('SELECT * FROM Unit1_Discharging', conn)
 Discharch3 = pd.read_sql_query('SELECT * FROM Unit3_Discharging', conn)

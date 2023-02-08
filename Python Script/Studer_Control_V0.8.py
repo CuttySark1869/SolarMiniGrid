@@ -22,6 +22,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import os
 import pandas as pd
 import time
+import numpy as np
 from datetime import datetime
 from datetime import timedelta
 
@@ -1350,10 +1351,6 @@ def test_param():
   print(_temp)
   _temp = r11004.read(1)
   print(_temp)
-
-system_init(1)
-test_param()
-exit()
 
 def data_collection(port_index):
   current_datetime, battery_SOC, battery_current, \
