@@ -45,7 +45,7 @@ BSP_addr = 601
 # Xtender addr
 XTM_addr = 101
 # Vtrack addr
-VTK_addr = 701
+VTK_addr = 301
 # object_type and property ID
 # refer to section 4.4 in protocol specs
 user_info_object_object_type = 1
@@ -1023,11 +1023,9 @@ for i in range(Vtrack_info.shape[0]):
                     src_addr=src_addr, dst_addr=VTK_addr, object_type=user_info_object_object_type,
                     object_id=tmp_object_id, property_id=user_info_object_property_Id, data_format=tmp_data_format))
   exec(tmp_cmd)
-  print(tmp_cmd)
   tmp_cmd = ('{variable_name}.description = \'{description}\''.format(
       variable_name=tmp_class_name, description=tmp_description))
   exec(tmp_cmd)
-  print(tmp_cmd)
 
 # 2.5 Create Command Function
 # ----------------------------
