@@ -38,7 +38,7 @@ class xtm_target:
     self.door_num = door_num
     self.port_name = port_name
     self.xtm_info = scom.ScomTarget(self.port_name,verbose,0,src_addr,xtm_addr+1,user_info_object_object_type,user_info_object_property_id)
-    self.xtm_setting = scom.ScomTarget(self.port_name,verbose,1,src_addr,xtm_addr+1,parameter_object_object_type,parameter_object_ram_property_id)
+    self.xtm_setting = scom.ScomTarget(self.port_name,verbose,0,src_addr,xtm_addr+1,parameter_object_object_type,parameter_object_ram_property_id)
     self.xtm_setting_flash = scom.ScomTarget(self.port_name,verbose,1,src_addr,xtm_addr+1,parameter_object_object_type,parameter_object_flash_property_id)
 
   def disable_watchdog(self):
@@ -113,22 +113,25 @@ if __name__ == '__main__':
               )""")
   
   i = 0
- 
-  while i < total_steps:
-    current_datetime, battery_SOC, battery_current, \
-        battery_voltage, battery_power, AC_in_current, \
-        AC_in_voltage, AC_in_power = xtm.data_log()
 
-    with conn:
-      c.execute('INSERT INTO datalog Values(?,?,?,?,?,?,?,?)', (current_datetime, battery_SOC,
-                                                                        battery_current, battery_voltage, battery_power, AC_in_voltage, AC_in_current, AC_in_power))
+  try: 
+    while i < total_steps:
+      current_datetime, battery_SOC, battery_current, \
+          battery_voltage, battery_power, AC_in_current, \
+          AC_in_voltage, AC_in_power = xtm.data_log()
 
-    xtm.charge_set_current(3)
-    print(str(i))
-    i += 1
-    time.sleep(sampling_time-1)
+      with conn:
+        c.execute('INSERT INTO datalog Values(?,?,?,?,?,?,?,?)', (current_datetime, battery_SOC,
+                                                                          battery_current, battery_voltage, battery_power, AC_in_voltage, AC_in_current, AC_in_power))
 
-  print('Data collection terminated!')
+      xtm.charge_set_current(3)
+      print(str(i))
+      i += 1
+      time.sleep(sampling_time-1)
+
+    print('Data collection terminated!')
+  except KeyboardInterrupt:
+    print('Data collection interrupted!')
+  
   conn.close()
-
   xtm.close()
