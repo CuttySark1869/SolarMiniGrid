@@ -33,32 +33,47 @@ parameter_object_ram_property_id = 13  #stored in ram
 # vtk_info = scom.ScomTarget(port_name,verbose,0,src_addr,vtk_addr+1,user_info_object_object_type,user_info_object_property_id)
 # vtk_setting = scom.ScomTarget(port_name,verbose,0,src_addr,vtk_addr+1,parameter_object_object_type,parameter_object_ram_property_id)
 
+class vtk_target: 
+  def __init__(self,port_name,door_num):
+    self.door_num = door_num
+    self.port_name = port_name
+    self.info = scom.ScomTarget(self.port_name,verbose,0,src_addr,vtk_addr+1,user_info_object_object_type,user_info_object_property_id)
+    self.setting = scom.ScomTarget(self.port_name,verbose,0,src_addr,vtk_addr+1,parameter_object_object_type,parameter_object_ram_property_id)
+    self.setting_flash = scom.ScomTarget(self.port_name,verbose,0,src_addr,vtk_addr+1,parameter_object_object_type,parameter_object_flash_property_id)
+
+  def charge_set_current(self,current):
+    self.setting.write(10002,current,'FLOAT')
+
+  def battery_get_voltage(self):
+    voltage = self.info.read(11000,'FLOAT')  
+    print(str(voltage));
+
 class xtm_target: 
   def __init__(self,port_name,door_num):
     self.door_num = door_num
     self.port_name = port_name
-    self.xtm_info = scom.ScomTarget(self.port_name,verbose,0,src_addr,xtm_addr+1,user_info_object_object_type,user_info_object_property_id)
-    self.xtm_setting = scom.ScomTarget(self.port_name,verbose,0,src_addr,xtm_addr+1,parameter_object_object_type,parameter_object_ram_property_id)
-    self.xtm_setting_flash = scom.ScomTarget(self.port_name,verbose,1,src_addr,xtm_addr+1,parameter_object_object_type,parameter_object_flash_property_id)
+    self.info = scom.ScomTarget(self.port_name,verbose,0,src_addr,xtm_addr+1,user_info_object_object_type,user_info_object_property_id)
+    self.setting = scom.ScomTarget(self.port_name,verbose,0,src_addr,xtm_addr+1,parameter_object_object_type,parameter_object_ram_property_id)
+    self.setting_flash = scom.ScomTarget(self.port_name,verbose,0,src_addr,xtm_addr+1,parameter_object_object_type,parameter_object_flash_property_id)
 
   def disable_watchdog(self):
-    self.xtm_setting_flash.write(1628,0,'BOOL') #disable watch dog
+    self.setting_flash.write(1628,0,'BOOL') #disable watch dog
   
   def open(self):
-    self.xtm_setting.write(1415,1,'INT32')
+    self.setting.write(1415,1,'INT32')
 
   def close(self):
-    self.xtm_setting.write(1399,1,'INT32')
+    self.setting.write(1399,1,'INT32')
 
   def data_log(self):
     current_datetime = datetime.now()
-    battery_SOC  = self.xtm_info.read(3007,'FLOAT') 
-    battery_current = self.xtm_info.read(3005,'FLOAT')
-    battery_voltage = self.xtm_info.read(3000,'FLOAT')
-    battery_power = self.xtm_info.read(3023,'FLOAT')
-    AC_in_current = self.xtm_info.read(3011,'FLOAT')
-    AC_in_voltage = self.xtm_info.read(3012,'FLOAT')
-    AC_in_power = self.xtm_info.read(3013,'FLOAT')
+    battery_SOC  = self.info.read(3007,'FLOAT') 
+    battery_current = self.info.read(3005,'FLOAT')
+    battery_voltage = self.info.read(3000,'FLOAT')
+    battery_power = self.info.read(3023,'FLOAT')
+    AC_in_current = self.info.read(3011,'FLOAT')
+    AC_in_voltage = self.info.read(3012,'FLOAT')
+    AC_in_power = self.info.read(3013,'FLOAT')
     return(current_datetime,battery_SOC,battery_current,battery_voltage,battery_power,AC_in_current,AC_in_voltage,AC_in_power)
 
   def grid_feeding_enable(self, max_current, start_time, end_time):
@@ -71,29 +86,30 @@ class xtm_target:
     start_time_in_min = round(start_time * 60)
     end_time_in_min = round(end_time * 60)
     
-    self.xtm_setting.write(1523,1,max_current,'FLOAT')
-    self.xtm_setting.write(1524,1,Vbat_force_feed,'FLOAT')
-    self.xtm_setting.write(1525,1,start_time_in_min,'FLOAT')
-    self.xtm_setting.write(1526,1,end_time_in_min,'FLOAT')
-    self.xtm_setting.write(1128,1,'BOOL') #transfer relay allowed
-    self.xtm_setting.write(1127,1,'BOOL') #grid-feeding allowed
+    self.setting.write(1523,1,max_current,'FLOAT')
+    self.setting.write(1524,1,Vbat_force_feed,'FLOAT')
+    self.setting.write(1525,1,start_time_in_min,'FLOAT')
+    self.setting.write(1526,1,end_time_in_min,'FLOAT')
+    self.setting.write(1128,1,'BOOL') #transfer relay allowed
+    self.setting.write(1127,1,'BOOL') #grid-feeding allowed
 
   def grid_feeding_disable(self):
-    self.xtm_setting.write(1127,0,'BOOL') #grid-feeding not allowed
+    self.setting.write(1127,0,'BOOL') #grid-feeding not allowed
 
   def charge_set_current(self,current):
-    self.xtm_setting.write(1138,current,'FLOAT')
+    self.setting.write(1138,current,'FLOAT')
 
   def charge_enable(self):
-    self.xtm_setting.write(1140,27.6,'FLOAT')
-    self.xtm_setting.write(1155,1,'BOOL') # absorption phase disabled
-    self.xtm_setting.write(1163,1,'BOOL') # equalization phase disabled
-    self.xtm_setting.write(1170,1,'BOOL') # reduced floating phase disabled
-    self.xtm_setting.write(1173,1,'BOOL') # periodic absorption phase disabled
-    self.xtm_setting.write(1125,1,'BOOL') # charge enabled
+    self.setting.write(1140,27.6,'FLOAT')
+    self.setting.write(1155,1,'BOOL') # absorption phase disabled
+    self.setting.write(1163,1,'BOOL') # equalization phase disabled
+    self.setting.write(1170,1,'BOOL') # reduced floating phase disabled
+    self.setting.write(1173,1,'BOOL') # periodic absorption phase disabled
+    self.setting.write(1125,1,'BOOL') # charge enabled
 
 if __name__ == '__main__':
 
+  vtk = vtk_target(port_name,1)
   xtm = xtm_target(port_name,1)
   xtm.open()
   xtm.charge_enable()
@@ -123,8 +139,10 @@ if __name__ == '__main__':
       with conn:
         c.execute('INSERT INTO datalog Values(?,?,?,?,?,?,?,?)', (current_datetime, battery_SOC,
                                                                           battery_current, battery_voltage, battery_power, AC_in_voltage, AC_in_current, AC_in_power))
+      xtm.charge_set_current(0)
+      vtk.battery_get_voltage()
+      vtk.charge_set_current(0)
 
-      xtm.charge_set_current(3)
       print(str(i))
       i += 1
       time.sleep(sampling_time-1)
