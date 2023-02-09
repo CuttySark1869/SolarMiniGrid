@@ -7,6 +7,7 @@ Created by: Yunjie Gu, Date: 09-02-2023
 
 import sqlite3
 import time
+import os
 import scom
 from datetime import datetime
 from datetime import timedelta
@@ -56,7 +57,6 @@ class xtm_target:
     AC_in_current = self.xtm_info.read(3011,'FLOAT')
     AC_in_voltage = self.xtm_info.read(3012,'FLOAT')
     AC_in_power = self.xtm_info.read(3013,'FLOAT')
-    print('battery power' + str(battery_voltage))
     return(current_datetime,battery_SOC,battery_current,battery_voltage,battery_power,AC_in_current,AC_in_voltage,AC_in_power)
 
   def grid_feeding_enable(self, max_current, start_time, end_time):
@@ -96,6 +96,7 @@ if __name__ == '__main__':
   xtm.open()
   #xtm.charge_enable()
 
+  os.remove('datalog.db')
   conn = sqlite3.connect('datalog.db')
   c = conn.cursor()
   c.execute("""CREATE TABLE IF NOT EXISTS datalog(
