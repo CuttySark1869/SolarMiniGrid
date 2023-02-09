@@ -33,10 +33,12 @@ class ScomTarget:
   def write(self, object_id, value, data_format):
     write_cmd = self.write_cmd(object_id, value, data_format)
     scom_output = subprocess.Popen(self.dir_scom + write_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    str_output = scom_output.stdout.readlines()
     if self.display:
-      str_output = scom_output.stdout.readlines()
       for line in str_output:
         print(line)
+    if str_output[-5] != 'debug: rx bytes:\r\n':
+      print('Sending Command Failure')
 
   def read_cmd(self, object_id, data_format):
     read_cmd = ('--port={} --verbose={} read_property src_addr={} dst_addr={} object_type={} '
@@ -47,10 +49,21 @@ class ScomTarget:
   def read(self, object_id, data_format):
     read_cmd = self.read_cmd(object_id, data_format)
     scom_output = subprocess.Popen(self.dir_scom + read_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    str_output = scom_output.stdout.readlines()
     if self.display:
-      str_output = scom_output.stdout.readlines()
       for line in str_output:
         print(line)
+    if str_output[-7] == 'response:\r\n':
+      raw_data = str_output[-1]
+      raw_data = raw_data[5:]
+      try:
+        data = int(raw_data)
+      except:
+        data = raw_data
+      return data
+    else:
+      print('Fetching Info Failure')
+
 
   @classmethod
   def test_scom():

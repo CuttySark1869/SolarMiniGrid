@@ -12,7 +12,7 @@ from datetime import datetime
 from datetime import timedelta
 
 port_name = 'COM5'
-verbose = 0
+verbose = 3
 src_addr = 1
 rcc_addr = 500 #Xcom-232i = RCC 
 bsp_addr = 600
@@ -27,15 +27,15 @@ parameter_object_object_type = 2
 parameter_object_flash_property_id = 5 #stored in flash
 parameter_object_ram_property_id = 13  #stored in ram
 
-vtk_info = scom.ScomTarget(port_name,verbose,1,src_addr,vtk_addr+1,user_info_object_object_type,user_info_object_property_id)
-vtk_setting = scom.ScomTarget(port_name,verbose,1,src_addr,vtk_addr+1,parameter_object_object_type,parameter_object_ram_property_id)
+# vtk_info = scom.ScomTarget(port_name,verbose,0,src_addr,vtk_addr+1,user_info_object_object_type,user_info_object_property_id)
+# vtk_setting = scom.ScomTarget(port_name,verbose,0,src_addr,vtk_addr+1,parameter_object_object_type,parameter_object_ram_property_id)
 
 class xtm_target: 
   def __init__(self,port_name,door_num):
     self.door_num = door_num
     self.port_name = port_name
-    self.xtm_info = scom.ScomTarget(self.port_name,verbose,1,src_addr,xtm_addr+1,user_info_object_object_type,user_info_object_property_id)
-    self.xtm_setting = scom.ScomTarget(self.port_name,verbose,1,src_addr,xtm_addr+1,parameter_object_object_type,parameter_object_ram_property_id)
+    self.xtm_info = scom.ScomTarget(self.port_name,verbose,0,src_addr,xtm_addr+1,user_info_object_object_type,user_info_object_property_id)
+    self.xtm_setting = scom.ScomTarget(self.port_name,verbose,0,src_addr,xtm_addr+1,parameter_object_object_type,parameter_object_ram_property_id)
     self.xtm_setting_flash = scom.ScomTarget(self.port_name,verbose,1,src_addr,xtm_addr+1,parameter_object_object_type,parameter_object_flash_property_id)
 
   def disable_watchdog(self):
@@ -48,7 +48,7 @@ class xtm_target:
     self.xtm_setting.write(1399,1,'INT32')
 
   def data_log(self):
-    current_datetime = 'time'
+    current_datetime = datetime.now()
     battery_SOC  = self.xtm_info.read(3007,'FLOAT') 
     battery_current = self.xtm_info.read(3005,'FLOAT')
     battery_voltage = self.xtm_info.read(3000,'FLOAT')
@@ -56,6 +56,7 @@ class xtm_target:
     AC_in_current = self.xtm_info.read(3011,'FLOAT')
     AC_in_voltage = self.xtm_info.read(3012,'FLOAT')
     AC_in_power = self.xtm_info.read(3013,'FLOAT')
+    print('battery power' + str(battery_voltage))
     return(current_datetime,battery_SOC,battery_current,battery_voltage,battery_power,AC_in_current,AC_in_voltage,AC_in_power)
 
   def grid_feeding_enable(self, max_current, start_time, end_time):
@@ -92,7 +93,7 @@ class xtm_target:
 if __name__ == '__main__':
 
   xtm = xtm_target(port_name,1)
-  #xtm.open()
+  xtm.open()
   #xtm.charge_enable()
 
   conn = sqlite3.connect('datalog.db')
@@ -109,7 +110,7 @@ if __name__ == '__main__':
               )""")
   
   i = 0
-  sample_no = 20
+  sample_no = 5
 
   while i < sample_no:
     current_datetime, battery_SOC, battery_current, \
