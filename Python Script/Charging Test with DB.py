@@ -26,6 +26,7 @@ import time
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 from datetime import timedelta
+import time
 from IPython.display import clear_output
 
 import logging
@@ -74,13 +75,13 @@ message_object_property_Id = 1
 # whether to display full info of fetched info (only for calling function, class calling is excluded)
 display_output = False
 # whether to chech port
-chech_port = True
+chech_port = False
 # whether to test communication protocol with serial port
-test_comm = True
+test_comm = False
 # whether to open a serial port
 open_port = False
 # open Xtender
-Xtender_open = True
+Xtender_open = False
 # close Xtender
 Xtender_close = False
 # Xtender initialization
@@ -1368,23 +1369,24 @@ def data_collection(port_index):
   global i
   global sample_no
 
-  current_datetime, battery_SOC, battery_current, \
-      battery_voltage, battery_power, AC_in_current, \
-      AC_in_voltage, AC_in_power = read_data(port_index)
+  print('it works')
 
-  with conn:
-    c.execute('INSERT INTO StuderOperation Values(?,?,?,?,?,?,?,?)', (current_datetime, battery_SOC,
-                                                                      battery_current, battery_voltage, battery_power, AC_out_voltage, AC_out_current, AC_out_power))
+  # while i < sample_no:
+  #   current_datetime, battery_SOC, battery_current, \
+  #       battery_voltage, battery_power, AC_in_current, \
+  #       AC_in_voltage, AC_in_power = read_data(port_index)
 
-  print str(current_datetime)
-  i += 1
+  #   with conn:
+  #     c.execute('INSERT INTO StuderOperation Values(?,?,?,?,?,?,?,?)', (current_datetime, battery_SOC,
+  #                                                                       battery_current, battery_voltage, battery_power, AC_out_voltage, AC_out_current, AC_out_power))
 
-  if i == sample_no:
-    sched.remove_job('datacollection')
-    print 'Data collection terminated!'
-    conn.close()
-    # scheduler.shutdown(wait=False)
+  #   print str(current_datetime)
+  #   i += 1
 
+  # sched.remove_job('datacollection')
+  # print 'Data collection terminated!'
+  # conn.close()
+  # scheduler.shutdown(wait=False)
 
 def main():
   # parameter and varibale init
@@ -1400,11 +1402,22 @@ def main():
   rcc_time_sync(1, rcc_init)
   bsp_init(1, bsp_init, battery_setting)
 #     grid_feeding_enable(1,5,0,1440)
-  battery_charge(1, 22)
-  job_data_collection = sched.add_job(data_collection, 'cron', args=[1], id='datacollection', second='0,15,30,45')
+  battery_charge(1, 22)#
+  print('debug')
+  second_expression = ','.join(str(x) for x in [0, 1, 2, 3, 4])
+  print second_expression
+
+  dt = datetime.datetime.now()
+  unix_timestamp = time.mktime(dt.timetuple())
+  
+  job_data_collection = sched.add_job(data_collection, 'cron', args=[1], id='datacollection', second=unix_timestamp)
+  print('debug')
   sched.start()
 
 
 if __name__ == '__main__':
   sched = BackgroundScheduler()
+  global unfinished
+  unfinished = 1
   main()
+  time.sleep(6)
