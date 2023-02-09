@@ -47,7 +47,7 @@ log.addHandler(h)
 cwd = os.getcwd()
 dir_scom = 'scom.exe '
 # port
-port_name = ['COM0', 'COM3']
+port_name = ['COM0', 'COM4']
 # verbose
 verbose_num = 3
 # src addr
@@ -94,21 +94,6 @@ bsp_init = False
 # 1 : demonstration kit;
 # 2 : smart grid lab
 battery_setting = 2
-
-# 2.2 Database creation/connection
-# ---------------------------------
-conn = sqlite3.connect('StuderOpearion.db')
-c = conn.cursor()
-c.execute("""CREATE TABLE IF NOT EXISTS StuderOperation(
-              sample_time text,
-              battery_SOC real,
-              battery_current real,
-              battery_voltage real,
-              battery_power real,
-              ac_in_current real,
-              ac_in_voltage real,
-              ac_in_power real
-            )""")
 
 
 # 2.3 Pre-define Command Class
@@ -1365,59 +1350,43 @@ def read_data(port_index):
   return current_datetime, battery_SOC, battery_current, battery_voltage, battery_power, AC_out_current, AC_out_voltage, AC_out_power
 
 
-def data_collection(port_index):
-  global i
-  global sample_no
-
-  print('it works')
-
-  # while i < sample_no:
-  #   current_datetime, battery_SOC, battery_current, \
-  #       battery_voltage, battery_power, AC_in_current, \
-  #       AC_in_voltage, AC_in_power = read_data(port_index)
-
-  #   with conn:
-  #     c.execute('INSERT INTO StuderOperation Values(?,?,?,?,?,?,?,?)', (current_datetime, battery_SOC,
-  #                                                                       battery_current, battery_voltage, battery_power, AC_out_voltage, AC_out_current, AC_out_power))
-
-  #   print str(current_datetime)
-  #   i += 1
-
-  # sched.remove_job('datacollection')
-  # print 'Data collection terminated!'
-  # conn.close()
-  # scheduler.shutdown(wait=False)
-
-def main():
-  # parameter and varibale init
-  global i
-  global sample_no
-
-  i = 0
-  sample_no = 4 * 60 * 24
+if __name__ == '__main__':
 
   # system init
   system_init(1)
   xtender_open(1, Xtender_open)
   rcc_time_sync(1, rcc_init)
   bsp_init(1, bsp_init, battery_setting)
-#     grid_feeding_enable(1,5,0,1440)
-  battery_charge(1, 22)#
-  print('debug')
-  second_expression = ','.join(str(x) for x in [0, 1, 2, 3, 4])
-  print second_expression
+  battery_charge(1, 22)
 
-  dt = datetime.datetime.now()
-  unix_timestamp = time.mktime(dt.timetuple())
+  conn = sqlite3.connect('StuderOpearion.db')
+  c = conn.cursor()
+  c.execute("""CREATE TABLE IF NOT EXISTS StuderOperation(
+                sample_time text,
+                battery_SOC real,
+                battery_current real,
+                battery_voltage real,
+                battery_power real,
+                ac_in_current real,
+                ac_in_voltage real,
+                ac_in_power real
+              )""")
   
-  job_data_collection = sched.add_job(data_collection, 'cron', args=[1], id='datacollection', second=unix_timestamp)
-  print('debug')
-  sched.start()
+  i = 0
+  sample_no = 10
 
+  while i < sample_no:
+    current_datetime, battery_SOC, battery_current, \
+        battery_voltage, battery_power, AC_in_current, \
+        AC_in_voltage, AC_in_power = read_data(1)
 
-if __name__ == '__main__':
-  sched = BackgroundScheduler()
-  global unfinished
-  unfinished = 1
-  main()
-  time.sleep(6)
+    with conn:
+      c.execute('INSERT INTO StuderOperation Values(?,?,?,?,?,?,?,?)', (current_datetime, battery_SOC,
+                                                                        battery_current, battery_voltage, battery_power, AC_in_voltage, AC_in_current, AC_in_power))
+
+    print str(i)
+    i += 1
+    time.sleep(1)
+
+  print 'Data collection terminated!'
+  conn.close()

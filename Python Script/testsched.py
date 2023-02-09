@@ -1,4 +1,5 @@
 from apscheduler.schedulers.background import BackgroundScheduler
+import time
 
 
 def my_job_function():
@@ -17,3 +18,4 @@ if __name__ == '__main__':
 
   # Start the scheduler
   scheduler.start()
+  time.sleep(10)
