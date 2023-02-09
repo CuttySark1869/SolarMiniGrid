@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
   xtm = xtm_target(port_name,1)
   xtm.open()
-  #xtm.charge_enable()
+  xtm.charge_enable()
 
   os.remove('datalog.db')
   conn = sqlite3.connect('datalog.db')
