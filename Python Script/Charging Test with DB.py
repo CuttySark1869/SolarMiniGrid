@@ -1373,7 +1373,7 @@ if __name__ == '__main__':
               )""")
   
   i = 0
-  sample_no = 10
+  sample_no = 20
 
   while i < sample_no:
     current_datetime, battery_SOC, battery_current, \
@@ -1386,7 +1386,7 @@ if __name__ == '__main__':
 
     print str(i)
     i += 1
-    time.sleep(1)
+    #time.sleep(1)
 
   print 'Data collection terminated!'
   conn.close()
