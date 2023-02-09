@@ -12,7 +12,7 @@ from datetime import datetime
 from datetime import timedelta
 
 port_name = 'COM5'
-verbose = 3
+verbose = 0
 src_addr = 1
 rcc_addr = 500 #Xcom-232i = RCC 
 bsp_addr = 600
@@ -48,7 +48,15 @@ class xtm_target:
     self.xtm_setting.write(1399,1,'INT32')
 
   def data_log(self):
-    print('')
+    current_datetime = 'time'
+    battery_SOC  = self.xtm_info.read(3007,'FLOAT') 
+    battery_current = self.xtm_info.read(3005,'FLOAT')
+    battery_voltage = self.xtm_info.read(3000,'FLOAT')
+    battery_power = self.xtm_info.read(3023,'FLOAT')
+    AC_in_current = self.xtm_info.read(3011,'FLOAT')
+    AC_in_voltage = self.xtm_info.read(3012,'FLOAT')
+    AC_in_power = self.xtm_info.read(3013,'FLOAT')
+    return(current_datetime,battery_SOC,battery_current,battery_voltage,battery_power,AC_in_current,AC_in_voltage,AC_in_power)
 
   def grid_feeding_enable(self, max_current, start_time, end_time):
     # Time used in the protocol is in minutes.
@@ -84,12 +92,12 @@ class xtm_target:
 if __name__ == '__main__':
 
   xtm = xtm_target(port_name,1)
-  xtm.open()
+  #xtm.open()
   #xtm.charge_enable()
-  
-  conn = sqlite3.connect('StuderOpearion.db')
+
+  conn = sqlite3.connect('datalog.db')
   c = conn.cursor()
-  c.execute("""CREATE TABLE IF NOT EXISTS StuderOperation(
+  c.execute("""CREATE TABLE IF NOT EXISTS datalog(
                 sample_time text,
                 battery_SOC real,
                 battery_current real,
@@ -109,7 +117,7 @@ if __name__ == '__main__':
         AC_in_voltage, AC_in_power = xtm.data_log()
 
     with conn:
-      c.execute('INSERT INTO StuderOperation Values(?,?,?,?,?,?,?,?)', (current_datetime, battery_SOC,
+      c.execute('INSERT INTO datalog Values(?,?,?,?,?,?,?,?)', (current_datetime, battery_SOC,
                                                                         battery_current, battery_voltage, battery_power, AC_in_voltage, AC_in_current, AC_in_power))
 
     print(str(i))
@@ -118,3 +126,5 @@ if __name__ == '__main__':
 
   print('Data collection terminated!')
   conn.close()
+
+  xtm.close()
