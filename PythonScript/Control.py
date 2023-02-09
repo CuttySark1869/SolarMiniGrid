@@ -139,7 +139,7 @@ if __name__ == '__main__':
       with conn:
         c.execute('INSERT INTO datalog Values(?,?,?,?,?,?,?,?)', (current_datetime, battery_SOC,
                                                                           battery_current, battery_voltage, battery_power, AC_in_voltage, AC_in_current, AC_in_power))
-      xtm.charge_set_current(0)
+      xtm.charge_set_current(2)
       vtk.battery_get_voltage()
       vtk.charge_set_current(0)
 

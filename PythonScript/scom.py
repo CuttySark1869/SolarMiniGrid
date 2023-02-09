@@ -2,7 +2,7 @@
 import subprocess
 import serial
 
-
+dir_scom = 'scom.exe '
 
 class ScomTarget:
  
@@ -14,7 +14,7 @@ class ScomTarget:
     self.object_type = object_type
     self.property_id = property_id
     self.display = display
-    self.dir_scom = 'scom.exe '
+    self.dir_scom = dir_scom
 
   @property
   def description(self):
@@ -64,22 +64,20 @@ class ScomTarget:
     else:
       print('Fetching Info Failure')
 
+def test_scom():
+  py2output = subprocess.Popen(dir_scom + 'test', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  for line in py2output.stdout.readlines():
+    print(line)
+  retval = py2output.wait()
+  return(retval)
 
-  @classmethod
-  def test_scom():
-    py2output = subprocess.Popen(ScomTarget.dir_scom + 'test', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    for line in py2output.stdout.readlines():
-      print(line)
-    retval = py2output.wait()
-    return(retval)
+def check_port():
+  py2output = subprocess.Popen(['mode'], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  for line in py2output.stdout.readlines():
+    print(line)
+  retval = py2output.wait()
+  return(retval)
 
-  def check_port():
-    py2output = subprocess.Popen(['mode'], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    for line in py2output.stdout.readlines():
-      print(line)
-    retval = py2output.wait()
-    return(retval)
-
-  def open_port(port_name):
-    ser = serial.Serial(port_name, baudrate=38400)
-    print(ser.name)         
+def open_port(port_name):
+  ser = serial.Serial(port_name, baudrate=38400)
+  print(ser.name)         
