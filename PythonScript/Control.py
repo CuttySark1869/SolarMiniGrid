@@ -19,6 +19,8 @@ rcc_addr = 500 #Xcom-232i = RCC
 bsp_addr = 600
 xtm_addr = 100
 vtk_addr = 300
+sampling_time = 1 # in seconds
+total_steps = 20  # total time = total_steps * sampling_time
 
 #info object type and property id (read-only)
 user_info_object_object_type = 1
@@ -36,7 +38,7 @@ class xtm_target:
     self.door_num = door_num
     self.port_name = port_name
     self.xtm_info = scom.ScomTarget(self.port_name,verbose,0,src_addr,xtm_addr+1,user_info_object_object_type,user_info_object_property_id)
-    self.xtm_setting = scom.ScomTarget(self.port_name,verbose,0,src_addr,xtm_addr+1,parameter_object_object_type,parameter_object_ram_property_id)
+    self.xtm_setting = scom.ScomTarget(self.port_name,verbose,1,src_addr,xtm_addr+1,parameter_object_object_type,parameter_object_ram_property_id)
     self.xtm_setting_flash = scom.ScomTarget(self.port_name,verbose,1,src_addr,xtm_addr+1,parameter_object_object_type,parameter_object_flash_property_id)
 
   def disable_watchdog(self):
@@ -111,9 +113,8 @@ if __name__ == '__main__':
               )""")
   
   i = 0
-  sample_no = 5
-
-  while i < sample_no:
+ 
+  while i < total_steps:
     current_datetime, battery_SOC, battery_current, \
         battery_voltage, battery_power, AC_in_current, \
         AC_in_voltage, AC_in_power = xtm.data_log()
@@ -122,9 +123,10 @@ if __name__ == '__main__':
       c.execute('INSERT INTO datalog Values(?,?,?,?,?,?,?,?)', (current_datetime, battery_SOC,
                                                                         battery_current, battery_voltage, battery_power, AC_in_voltage, AC_in_current, AC_in_power))
 
+    xtm.charge_set_current(3)
     print(str(i))
     i += 1
-    #time.sleep(1)
+    time.sleep(sampling_time-1)
 
   print('Data collection terminated!')
   conn.close()
