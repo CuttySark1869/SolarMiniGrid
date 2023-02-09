@@ -1,18 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Description: the following script is dedicated to communicate and
-             control (retrieve info and send commands) Xtender via scom
-Developing Operating System: Windows 7 Enterprise SP1
-Developing Environment: Anaconda Python 2.7.13
-First created: 10/03/2017 (10th March 2017)
-Last modified: 30/04/2018
-Author: Minghao Xu
-Scom Version: 1.6.26
-Xtender Version: 1.6.22
-BSP Version: 1.6.14
-Script Version: 0.9
-Update Note: This script is created to test the SOC curve of the batteries
-        during charging and store the data in a database
+             control (retrieve info and send commands) Variotrack and Xtender via scom
+Created by: Yunjie Gu, Date: 09-02-2023
 """
 # ------------------------------------------------------------------------
 # 1. Import packages and set logger
@@ -29,15 +19,15 @@ from datetime import timedelta
 import time
 from IPython.display import clear_output
 
-import logging
+# import logging
 
-log = logging.getLogger('apscheduler.executors.default')
-log.setLevel(logging.INFO)  # DEBUG
+# log = logging.getLogger('apscheduler.executors.default')
+# log.setLevel(logging.INFO)  # DEBUG
 
-fmt = logging.Formatter('%(levelname)s:%(name)s:%(message)s')
-h = logging.StreamHandler()
-h.setFormatter(fmt)
-log.addHandler(h)
+# fmt = logging.Formatter('%(levelname)s:%(name)s:%(message)s')
+# h = logging.StreamHandler()
+# h.setFormatter(fmt)
+# log.addHandler(h)
 
 # 2. Set pre-defined paramets and functions
 # ------------------------------------------
