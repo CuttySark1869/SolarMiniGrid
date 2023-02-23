@@ -9,10 +9,11 @@ import sqlite3
 import time
 import os
 import scom
+from db2csv import db2csv
 from datetime import datetime
 from datetime import timedelta
 
-port_name = 'COM5'
+port_name = 'COM5' # the port name can be find in device manager 
 verbose = 3
 src_addr = 1
 rcc_addr = 500 #Xcom-232i = RCC 
@@ -20,7 +21,7 @@ bsp_addr = 600
 xtm_addr = 100
 vtk_addr = 300
 sampling_time = 1 # in seconds
-total_steps = 20  # total time = total_steps * sampling_time
+total_steps = 5  # total time = total_steps * sampling_time
 
 #info object type and property id (read-only)
 user_info_object_object_type = 1
@@ -33,6 +34,22 @@ parameter_object_ram_property_id = 13  #stored in ram
 # vtk_info = scom.ScomTarget(port_name,verbose,0,src_addr,vtk_addr+1,user_info_object_object_type,user_info_object_property_id)
 # vtk_setting = scom.ScomTarget(port_name,verbose,0,src_addr,vtk_addr+1,parameter_object_object_type,parameter_object_ram_property_id)
 
+class bsp_target:
+  def __init__(self,port_name,door_num):
+    self.door_num = door_num
+    self.port_name = port_name
+    self.info = scom.ScomTarget(self.port_name,verbose,0,src_addr,bsp_addr+1,user_info_object_object_type,user_info_object_property_id)
+
+  def data_log(self):
+    bat_voltage = self.info.read(7000,'FLOAT')
+    bat_current = self.info.read(7001,'FLOAT')
+    #coeff = 5.5
+    #bat_current = bat_current * coeff
+    bat_soc = self.info.read(7002,'FLOAT')
+    bat_power = self.info.read(7003,'FLOAT')
+    #bat_power = bat_current*bat_voltage 
+    return(bat_soc,bat_voltage,bat_power)
+
 class vtk_target: 
   def __init__(self,port_name,door_num):
     self.door_num = door_num
@@ -44,9 +61,10 @@ class vtk_target:
   def charge_set_current(self,current):
     self.setting.write(10002,current,'FLOAT')
 
-  def battery_get_voltage(self):
-    voltage = self.info.read(11000,'FLOAT')  
-    print(str(voltage));
+  def data_log(self):
+    pv_power = self.info.read(11004,'FLOAT') 
+    pv_voltage = self.info.read(11002,'FLOAT')
+    return(pv_voltage,pv_power)
 
 class xtm_target: 
   def __init__(self,port_name,door_num):
@@ -61,20 +79,17 @@ class xtm_target:
   
   def open(self):
     self.setting.write(1415,1,'INT32')
+    self.setting.write(1128,0,'BOOL') #transfer relay disable
 
   def close(self):
     self.setting.write(1399,1,'INT32')
 
   def data_log(self):
-    current_datetime = datetime.now()
-    battery_SOC  = self.info.read(3007,'FLOAT') 
-    battery_current = self.info.read(3005,'FLOAT')
-    battery_voltage = self.info.read(3000,'FLOAT')
-    battery_power = self.info.read(3023,'FLOAT')
-    AC_in_current = self.info.read(3011,'FLOAT')
-    AC_in_voltage = self.info.read(3012,'FLOAT')
-    AC_in_power = self.info.read(3013,'FLOAT')
-    return(current_datetime,battery_SOC,battery_current,battery_voltage,battery_power,AC_in_current,AC_in_voltage,AC_in_power)
+    ac_in_voltage = self.info.read(3012,'FLOAT')
+    ac_in_power = self.info.read(3013,'FLOAT')
+    ac_out_voltage = self.info.read(3021,'FLOAT')
+    ac_out_power = self.info.read(3136,'FLOAT')
+    return(ac_in_voltage,ac_in_power,ac_out_voltage,ac_out_power)
 
   def grid_feeding_enable(self, max_current, start_time, end_time):
     # Time used in the protocol is in minutes.
@@ -96,6 +111,9 @@ class xtm_target:
   def grid_feeding_disable(self):
     self.setting.write(1127,0,'BOOL') #grid-feeding not allowed
 
+  def ac_set_voltage_out(self,volt):
+    self.setting.write(1286,volt,'FLOAT')
+
   def charge_set_current(self,current):
     self.setting.write(1138,current,'FLOAT')
 
@@ -111,6 +129,8 @@ if __name__ == '__main__':
 
   vtk = vtk_target(port_name,1)
   xtm = xtm_target(port_name,1)
+  bsp = bsp_target(port_name,1)
+
   xtm.open()
   xtm.charge_enable()
 
@@ -120,34 +140,42 @@ if __name__ == '__main__':
   c.execute("""CREATE TABLE IF NOT EXISTS datalog(
                 sample_time text,
                 battery_SOC real,
-                battery_current real,
                 battery_voltage real,
                 battery_power real,
-                ac_in_current real,
+                pv_voltage real,
+                pv_power real,
                 ac_in_voltage real,
-                ac_in_power real
+                ac_in_power real,
+                ac_out_voltage real,
+                ac_out_power real
               )""")
   
   i = 0
 
   try: 
     while i < total_steps:
-      current_datetime, battery_SOC, battery_current, \
-          battery_voltage, battery_power, AC_in_current, \
-          AC_in_voltage, AC_in_power = xtm.data_log()
+
+      # data logging
+      current_datetime = datetime.now()
+      ac_in_voltage, ac_in_power, ac_out_voltage, ac_out_power = xtm.data_log()
+      battery_soc, battery_voltage, battery_power = bsp.data_log()
+      pv_voltage,pv_power = vtk.data_log()
 
       with conn:
-        c.execute('INSERT INTO datalog Values(?,?,?,?,?,?,?,?)', (current_datetime, battery_SOC,
-                                                                          battery_current, battery_voltage, battery_power, AC_in_voltage, AC_in_current, AC_in_power))
+        c.execute('INSERT INTO datalog Values(?,?,?,?,?,?,?,?,?,?)', (current_datetime, battery_soc,
+                battery_voltage, battery_power, pv_voltage, pv_power, ac_in_voltage, ac_in_power, ac_out_voltage, ac_out_power))
       xtm.charge_set_current(2)
-      vtk.battery_get_voltage()
+      xtm.ac_set_voltage_out(200)
       vtk.charge_set_current(0)
 
       print(str(i))
       i += 1
       time.sleep(sampling_time-1)
 
+    print('Converting data base to csv.')
+    db2csv('datalog')
     print('Data collection terminated!')
+
   except KeyboardInterrupt:
     print('Data collection interrupted!')
   
