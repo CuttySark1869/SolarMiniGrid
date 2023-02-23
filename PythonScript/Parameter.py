@@ -27,8 +27,7 @@ BSP_setting = [(6000, 'BASIC SETINGS', 'ONLY LEVEL'),
                (6022, '    Charge efficiency factor', 'FLOAT'),
                (6023, '    Peukert exponent', 'FLOAT'),
                (6049, '    Use C20 Capacity as reference value', 'BOOL')]
-
-print(BSP_setting[0]{0})               
+             
 # -----------------------------------------------------
 # BSP info parameters
 BSP_info = [(7000, 'Battery voltage', 'FLOAT'),
@@ -692,3 +691,13 @@ Xtender_info = [(3000, 'Battery voltage', 'FLOAT'),
                 (3160, 'Source of limitation of the functions charger or injector', 'SHORT ENUM'),
                 (3161, 'Battery priority active', 'SHORT ENUM'),
                 (3162, 'Forced grid feeding active', 'SHORT ENUM')]
+
+Variotrack_info = [(11000, 'Battery voltage', 'FLOAT'),
+                (11001, 'Battery current', 'FLOAT'),
+                (11002, 'PV voltage', 'FLOAT'),
+                (11003, 'PV current', 'FLOAT'),
+                (11004, 'PV power', 'FLOAT')]
+
+Variotrack_setting = [(10002, 'Battery charge current', 'FLOAT'),
+                (10005, 'Floating voltage', 'FLOAT'),
+                (10009, 'Absortion voltage', 'FLOAT')]
