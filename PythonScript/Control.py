@@ -21,7 +21,7 @@ bsp_addr = 600
 xtm_addr = 100
 vtk_addr = 300
 sampling_time = 1 # in seconds
-total_steps = 20  # total time = total_steps * sampling_time
+total_steps = 5  # total time = total_steps * sampling_time
 
 #info object type and property id (read-only)
 user_info_object_object_type = 1
@@ -79,6 +79,7 @@ class xtm_target:
   
   def open(self):
     self.setting.write(1415,1,'INT32')
+    self.setting.write(1128,0,'BOOL') #transfer relay disable
 
   def close(self):
     self.setting.write(1399,1,'INT32')
