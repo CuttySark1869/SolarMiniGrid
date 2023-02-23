@@ -9,7 +9,7 @@ import sqlite3
 import time
 import os
 import scom
-import csv
+from db2csv import db2csv
 from datetime import datetime
 from datetime import timedelta
 
@@ -171,6 +171,8 @@ if __name__ == '__main__':
       i += 1
       time.sleep(sampling_time-1)
 
+    print('Converting data base to csv.')
+    db2csv('datalog')
     print('Data collection terminated!')
 
   except KeyboardInterrupt:
