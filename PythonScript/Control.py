@@ -133,10 +133,10 @@ class xtm_target:
         start_time_in_min = round(start_time * 60)
         end_time_in_min = round(end_time * 60)
 
-        self.setting.write(1523, 1, 0, 'FLOAT')
-        self.setting.write(1524, 1, Vbat_force_feed, 'FLOAT')
-        self.setting.write(1525, 1, start_time_in_min, 'FLOAT')
-        self.setting.write(1526, 1, end_time_in_min, 'FLOAT')
+        self.setting.write(1523, 0, 'FLOAT')
+        self.setting.write(1524, Vbat_force_feed, 'FLOAT')
+        self.setting.write(1525, start_time_in_min, 'FLOAT')
+        self.setting.write(1526, end_time_in_min, 'FLOAT')
         self.setting.write(1128, 1, 'BOOL')  # transfer relay allowed
         self.setting.write(1127, 1, 'BOOL')  # grid-feeding allowed
 
@@ -158,10 +158,14 @@ if __name__ == '__main__':
     bsp = bsp_target(port_name, 1)
 
     """ prepare database for data logging """
-    os.remove(data_log_name + '.db')
+    try: 
+        os.remove(data_log_name + '.db')
+    except:
+        pass
+    
     conn = sqlite3.connect(data_log_name + '.db')
     c = conn.cursor()
-    c.execute("""CREATE TABLE IF NOT EXISTS datalog(
+    c.execute("""CREATE TABLE IF NOT EXISTS data_log(
                 sample_time text,
                 battery_SOC real,
                 battery_voltage real,
@@ -200,7 +204,7 @@ if __name__ == '__main__':
             pv_voltage, pv_power = vtk.data_log()
 
             with conn:
-                c.execute('INSERT INTO datalog Values(?,?,?,?,?,?,?,?,?,?)', (current_datetime, battery_soc,
+                c.execute('INSERT INTO data_log Values(?,?,?,?,?,?,?,?,?,?)', (current_datetime, battery_soc,
                                                                               battery_voltage, battery_power,
                                                                               pv_voltage, pv_power, ac_in_voltage,
                                                                               ac_in_power, ac_out_voltage,
