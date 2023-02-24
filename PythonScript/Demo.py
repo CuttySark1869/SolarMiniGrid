@@ -22,8 +22,12 @@ print('Battery Power = ' + bat_power + 'kW')
 
 xtm.open()
 xtm.grid_feeding_enable(0,23.9)
+time.sleep(10)
+
+xtm.transfer_relay_disable()
 xtm.charge_set_current(0)
-xtm.grid_feeding_set_current(1)
+xtm.grid_feeding_set_current(0.5)
+xtm.ac_set_voltage_out(200)
 
 time.sleep(10)
 
