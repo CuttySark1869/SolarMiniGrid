@@ -190,7 +190,7 @@ if __name__ == '__main__':
 
     if ctrl_mode == 1:    
         xtm.charge_enable()
-        xtm.grid_feeding_enable(0,24)
+        xtm.grid_feeding_enable(0,23.9)
     else: 
         if ctrl_mode == 2:
             xtm.transfer_relay_disable()

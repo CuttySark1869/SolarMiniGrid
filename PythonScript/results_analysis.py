@@ -5,7 +5,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
 
-real_time_information = pd.read_csv('datalog.csv')
+real_time_information = pd.read_csv('data_log.csv')
 n_samples = len(real_time_information.DateTime)
 
 plt.plot(np.arange(0, n_samples), real_time_information.battery_soc)
