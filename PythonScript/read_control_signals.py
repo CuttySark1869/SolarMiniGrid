@@ -44,7 +44,7 @@ if __name__ == "__main__":
     for t in range(time_slots):
         singals["time_slots"][t] = t
         singals["pv_current"][t] = random.random() * 5
-        singals["ac_in_current"][t] = random.random() * 5
+        singals["ac_in_current"][t] = random.random() * 10 - 5
         singals["ac_out_voltage"][t] = 180 + random.random() * 60
 
     tester = secondary_control_signal(control_log)

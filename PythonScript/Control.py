@@ -15,6 +15,7 @@ from datetime import timedelta
 import pandas as pd
 from read_control_signals import secondary_control_signal
 
+ctrl_mode = 1       # 1: generator connected mode; 2: islanded mode
 port_name = 'COM5'  # the port name can be find in device manager
 ems_signal_name = 'ems_log'
 data_log_name = 'data_log'
@@ -91,12 +92,8 @@ class xtm_target:
         self.setting_flash = scom.ScomTarget(self.port_name, verbose, 0, src_addr, xtm_addr + 1,
                                              parameter_object_object_type, parameter_object_flash_property_id)
 
-    def disable_watchdog(self):
-        self.setting_flash.write(1628, 0, 'BOOL')  # disable watch dog
-
     def open(self):
         self.setting.write(1415, 1, 'INT32')
-        self.setting.write(1128, 0, 'BOOL')  # transfer relay disable
 
     def close(self):
         self.setting.write(1399, 1, 'INT32')
@@ -107,8 +104,26 @@ class xtm_target:
         ac_out_voltage = self.info.read(3021, 'FLOAT')
         ac_out_power = self.info.read(3136, 'FLOAT')
         return (ac_in_voltage, ac_in_power, ac_out_voltage, ac_out_power)
+    
+    def ac_set_voltage_out(self, volt):
+        self.setting.write(1286, volt, 'FLOAT')
 
-    def grid_feeding_enable(self, max_current, start_time, end_time):
+    def charge_set_current(self, current):
+        self.setting.write(1138, current, 'FLOAT')
+
+    def grid_feeding_set_current(self, current):
+        self.setting.write(1523, current, 'FLOAT')
+    
+    def disable_watchdog(self):
+        self.setting_flash.write(1628, 0, 'BOOL')  # disable watch dog
+
+    def transfer_relay_enable(self):
+        self.setting.write(1128, 1, 'BOOL')
+
+    def transfer_relay_disable(self):
+        self.setting.write(1128, 0, 'BOOL')    
+
+    def grid_feeding_enable(self, start_time, end_time):
         # Time used in the protocol is in minutes.
         # Min is 0, i.e., 00:00
         # Max is 1440, i.e., 24:00
@@ -118,7 +133,7 @@ class xtm_target:
         start_time_in_min = round(start_time * 60)
         end_time_in_min = round(end_time * 60)
 
-        self.setting.write(1523, 1, max_current, 'FLOAT')
+        self.setting.write(1523, 1, 0, 'FLOAT')
         self.setting.write(1524, 1, Vbat_force_feed, 'FLOAT')
         self.setting.write(1525, 1, start_time_in_min, 'FLOAT')
         self.setting.write(1526, 1, end_time_in_min, 'FLOAT')
@@ -128,12 +143,6 @@ class xtm_target:
     def grid_feeding_disable(self):
         self.setting.write(1127, 0, 'BOOL')  # grid-feeding not allowed
 
-    def ac_set_voltage_out(self, volt):
-        self.setting.write(1286, volt, 'FLOAT')
-
-    def charge_set_current(self, current):
-        self.setting.write(1138, current, 'FLOAT')
-
     def charge_enable(self):
         self.setting.write(1140, 27.6, 'FLOAT')
         self.setting.write(1155, 1, 'BOOL')  # absorption phase disabled
@@ -141,7 +150,6 @@ class xtm_target:
         self.setting.write(1170, 1, 'BOOL')  # reduced floating phase disabled
         self.setting.write(1173, 1, 'BOOL')  # periodic absorption phase disabled
         self.setting.write(1125, 1, 'BOOL')  # charge enabled
-
 
 if __name__ == '__main__':
 
@@ -173,7 +181,13 @@ if __name__ == '__main__':
 
     """ start and configure the device """
     xtm.open()
-    xtm.charge_enable()
+
+    if ctrl_mode == 1:    
+        xtm.charge_enable()
+        xtm.grid_feeding_enable(0,24)
+    else: 
+        if ctrl_mode == 2:
+            xtm.transfer_relay_disable()
 
     """ execute the control and data logging """
     i = 0
@@ -192,9 +206,17 @@ if __name__ == '__main__':
                                                                               ac_in_power, ac_out_voltage,
                                                                               ac_out_power))
 
-            xtm.charge_set_current(min(ems_signals.ac_in_current[i], 5))
             vtk.charge_set_current(min(ems_signals.pv_current[i], 5))  # Set the PV current
-            xtm.ac_set_voltage_out(min(ems_signals.ac_out_voltage[i], 240))
+            if ctrl_mode == 1:
+                if ems_signals.ac_in_current[i] > 0:
+                    xtm.grid_feeding_set_current(0)
+                    xtm.charge_set_current(min(ems_signals.ac_in_current[i]*230/24, 5))
+                else:
+                    xtm.charge_set_current(0)
+                    xtm.grid_feeding_set_current(min(-ems_signals.ac_in_current[i], 1))
+            else:
+                if ctrl_mode == 2:
+                    xtm.ac_set_voltage_out(min(ems_signals.ac_out_voltage[i], 240))
 
             print(str(i))
             i += 1
