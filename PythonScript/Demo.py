@@ -5,7 +5,8 @@ vtk = ctr.vtk_target(ctr.port_name, 1)
 bsp = ctr.bsp_target(ctr.port_name, 1)
 xtm = ctr.xtm_target(ctr.port_name, 1)
 
-vtk.charge_set_current(1)
+# bsp.calibrate() # calibrate the battery current sensor
+vtk.charge_set_current(0)
 
 time.sleep(2)
 

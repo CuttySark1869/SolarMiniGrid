@@ -45,9 +45,9 @@ class bsp_target:
         self.port_name = port_name
         self.info = scom.ScomTarget(self.port_name, verbose, 0, src_addr, bsp_addr + 1, user_info_object_object_type,
                                     user_info_object_property_id)
+        self.setting_flash = scom.ScomTarget(self.port_name, verbose, 0, src_addr, bsp_addr + 1,
+                                             parameter_object_object_type, parameter_object_flash_property_id)
 
-    #def get_shunt_para(self)
-        
     def data_log(self):
         bat_voltage = self.info.read(7000, 'FLOAT')
         # bat_current = self.info.read(7001, 'FLOAT')
@@ -55,7 +55,10 @@ class bsp_target:
         bat_power = self.info.read(7003, 'FLOAT')
         bat_power = str(float(bat_power)/1000)
         return (bat_soc, bat_voltage, bat_power)
-
+    
+    def calibrate(self):
+        self.setting_flash.write(6017, 520, 'FLOAT') #A,  shunt nominal current
+        self.setting_flash.write(6018, 50, 'FLOAT')  #mV, shunt nominal voltage
 
 class vtk_target:
     def __init__(self, port_name, door_num):
