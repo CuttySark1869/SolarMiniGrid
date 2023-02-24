@@ -26,5 +26,9 @@ xtm.charge_set_current(0)
 xtm.grid_feeding_set_current(1)
 
 time.sleep(10)
+
+xtm.grid_feeding_control(0)
 vtk.charge_set_current(0)
+xtm.charge_set_current(1)
+
 xtm.close()
