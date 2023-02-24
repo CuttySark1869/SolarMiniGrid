@@ -133,15 +133,17 @@ class xtm_target:
         start_time_in_min = round(start_time * 60)
         end_time_in_min = round(end_time * 60)
 
-        self.setting.write(1523, 0, 'FLOAT')
-        self.setting.write(1524, Vbat_force_feed, 'FLOAT')
-        self.setting.write(1525, start_time_in_min, 'FLOAT')
-        self.setting.write(1526, end_time_in_min, 'FLOAT')
-        self.setting.write(1128, 1, 'BOOL')  # transfer relay allowed
-        self.setting.write(1127, 1, 'BOOL')  # grid-feeding allowed
+        self.setting.write(1550, 1, 'BOOL')         # save to flash
+        self.setting_flash.write(1523, 0, 'FLOAT')
+        self.setting_flash.write(1524, Vbat_force_feed, 'FLOAT')
+        self.setting_flash.write(1525, start_time_in_min, 'FLOAT')
+        self.setting_flash.write(1526, end_time_in_min, 'FLOAT')
+        self.setting_flash.write(1128, 1, 'BOOL')   # transfer relay allowed
+        self.setting_flash.write(1127, 1, 'BOOL')   # grid-feeding allowed
 
     def grid_feeding_disable(self):
-        self.setting.write(1127, 0, 'BOOL')  # grid-feeding not allowed
+        self.setting.write(1550, 1, 'BOOL')         # save to flash
+        self.setting_flash.write(1127, 0, 'BOOL')   # grid-feeding not allowed
 
     def charge_enable(self):
         self.setting.write(1140, 27.6, 'FLOAT')
@@ -210,7 +212,7 @@ if __name__ == '__main__':
                                                                               ac_in_power, ac_out_voltage,
                                                                               ac_out_power))
 
-            vtk.charge_set_current(min(ems_signals.pv_current[i], 5))  # Set the PV current
+            vtk.charge_set_current(min(ems_signals.pv_current[i], 0))  # Set the PV current
             if ctrl_mode == 1:
                 if ems_signals.ac_in_current[i] > 0:
                     xtm.grid_feeding_set_current(0)
