@@ -17,6 +17,7 @@ from read_control_signals import secondary_control_signal
 
 port_name = 'COM5'  # the port name can be find in device manager
 ems_signal_name = 'ems_log'
+data_log_name = 'data_log'
 verbose = 3
 src_addr = 1
 rcc_addr = 500  # Xcom-232i = RCC
@@ -24,7 +25,7 @@ bsp_addr = 600
 xtm_addr = 100
 vtk_addr = 300
 sampling_time = 1  # in seconds
-total_steps = 5  # total time = total_steps * sampling_time
+total_steps = 5    # total time = total_steps * sampling_time
 
 # info object type and property id (read-only)
 user_info_object_object_type = 1
@@ -45,14 +46,14 @@ class bsp_target:
         self.info = scom.ScomTarget(self.port_name, verbose, 0, src_addr, bsp_addr + 1, user_info_object_object_type,
                                     user_info_object_property_id)
 
+    #def get_shunt_para(self)
+        
     def data_log(self):
         bat_voltage = self.info.read(7000, 'FLOAT')
-        bat_current = self.info.read(7001, 'FLOAT')
-        # coeff = 5.5
-        # bat_current = bat_current * coeff
+        # bat_current = self.info.read(7001, 'FLOAT')
         bat_soc = self.info.read(7002, 'FLOAT')
         bat_power = self.info.read(7003, 'FLOAT')
-        # bat_power = bat_current*bat_voltage
+        bat_power = str(float(bat_power)/1000)
         return (bat_soc, bat_voltage, bat_power)
 
 
@@ -145,11 +146,9 @@ if __name__ == '__main__':
     xtm = xtm_target(port_name, 1)
     bsp = bsp_target(port_name, 1)
 
-    xtm.open()
-    xtm.charge_enable()
-
-    os.remove('datalog.db')
-    conn = sqlite3.connect('datalog.db')
+    """ prepare database for data logging """
+    os.remove(data_log_name + '.db')
+    conn = sqlite3.connect(data_log_name + '.db')
     c = conn.cursor()
     c.execute("""CREATE TABLE IF NOT EXISTS datalog(
                 sample_time text,
@@ -163,13 +162,18 @@ if __name__ == '__main__':
                 ac_out_voltage real,
                 ac_out_power real
               )""")
-
-    i = 0
-    """ Initial control logger """
+    
+    """ read csv file for ems commands """
     control_io = secondary_control_signal(ems_signal_name)
-
     ems_signals = control_io.read_control_log()
     total_steps = len(ems_signals.time_slots)
+
+    """ start and configure the device """
+    xtm.open()
+    xtm.charge_enable()
+
+    """ execute the control and data logging """
+    i = 0
     try:
         while i < total_steps:
             # data logging
@@ -186,15 +190,16 @@ if __name__ == '__main__':
                                                                               ac_out_power))
 
             xtm.charge_set_current(min(ems_signals.ac_in_current[i], 5))
-            xtm.ac_set_voltage_out(min(ems_signals.ac_out_voltage[i], 240))
             vtk.charge_set_current(min(ems_signals.pv_current[i], 5))  # Set the PV current
+            xtm.ac_set_voltage_out(min(ems_signals.ac_out_voltage[i], 240))
 
             print(str(i))
             i += 1
-            time.sleep(sampling_time - 1)
+            if sampling_time > 1:
+                time.sleep(sampling_time - 1)
 
         print('Converting data base to csv.')
-        db2csv('datalog')
+        db2csv(data_log_name)
         print('Data collection terminated!')
 
     except KeyboardInterrupt:
