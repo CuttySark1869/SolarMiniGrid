@@ -13,3 +13,6 @@ def db2csv(name):
     data_log.columns = columns_names
 
     data_log.to_csv(csv_file, index=None)
+
+if __name__ == '__main__':
+    db2csv('data_log')

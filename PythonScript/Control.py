@@ -25,7 +25,7 @@ rcc_addr = 500  # Xcom-232i = RCC
 bsp_addr = 600
 xtm_addr = 100
 vtk_addr = 300
-sampling_time = 1  # in seconds
+sampling_time = 5  # in seconds
 total_steps = 5    # total time = total_steps * sampling_time
 
 # info object type and property id (read-only)
@@ -141,9 +141,9 @@ class xtm_target:
         self.setting_flash.write(1128, 1, 'BOOL')   # transfer relay allowed
         self.setting_flash.write(1127, 1, 'BOOL')   # grid-feeding allowed
 
-    def grid_feeding_disable(self):
+    def grid_feeding_control(self,enabled):
         self.setting.write(1550, 1, 'BOOL')         # save to flash
-        self.setting_flash.write(1127, 0, 'BOOL')   # grid-feeding not allowed
+        self.setting_flash.write(1127, enabled, 'BOOL')   # grid-feeding not allowed
 
     def charge_enable(self):
         self.setting.write(1140, 27.6, 'FLOAT')
@@ -212,13 +212,15 @@ if __name__ == '__main__':
                                                                               ac_in_power, ac_out_voltage,
                                                                               ac_out_power))
 
-            vtk.charge_set_current(min(ems_signals.pv_current[i], 0))  # Set the PV current
+            vtk.charge_set_current(min(ems_signals.pv_current[i], 5))  # Set the PV current
             if ctrl_mode == 1:
                 if ems_signals.ac_in_current[i] > 0:
                     xtm.grid_feeding_set_current(0)
+                    xtm.grid_feeding_control(0)
                     xtm.charge_set_current(min(ems_signals.ac_in_current[i]*230/24, 5))
                 else:
                     xtm.charge_set_current(0)
+                    xtm.grid_feeding_control(1)
                     xtm.grid_feeding_set_current(min(-ems_signals.ac_in_current[i], 1))
             else:
                 if ctrl_mode == 2:
@@ -230,7 +232,10 @@ if __name__ == '__main__':
                 time.sleep(sampling_time - 1)
 
         print('Converting data base to csv.')
-        db2csv(data_log_name)
+        try:
+            db2csv(data_log_name)
+        except:
+            pass
         print('Data collection terminated!')
 
     except KeyboardInterrupt:
