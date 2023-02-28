@@ -9,7 +9,7 @@ import sqlite3
 import time
 import os
 import scom
-from db2csv import db2csv
+from db2csv_online import db2csv
 from datetime import datetime
 from datetime import timedelta
 import pandas as pd
@@ -78,6 +78,7 @@ class vtk_target:
 
 class xtm_target:
     def __init__(self, port_name, door_num):
+        self.dir = 1.0  # -1.0 discharge, 1.0 charge
         self.door_num = door_num
         self.port_name = port_name
         self.info = scom.ScomTarget(self.port_name, verbose, 0, src_addr, xtm_addr + 1, user_info_object_object_type,
@@ -104,7 +105,7 @@ class xtm_target:
         ac_out_voltage = self.info.read(3021, 'FLOAT')
         ac_out_power = self.info.read(3136, 'FLOAT')
         ac_out_power = float(ac_out_power)*1000
-        ac_in_power = float(ac_in_power)*1000 # - ac_out_power        
+        ac_in_power = float(ac_in_power)*1000 # * self.dir # - ac_out_power        
         return (ac_in_voltage, str(ac_in_power), ac_out_voltage, str(ac_out_power))
     
     # Set the inverter output voltage (V) in stand alone mode
@@ -116,10 +117,12 @@ class xtm_target:
     def charge_set_current(self, current):
         self.__transfer_relay_enable()
         if current > 0:
+            self.dir = 1.0
             self.__grid_feeding_set_current(0)
             self.__grid_feeding_control(0)
             self.__charge_set_current(max(min(float(current),max_current),0.0))
         else:
+            self.dir = -1.0
             self.__charge_set_current(0)
             self.__grid_feeding_control(1)
             current = -float(current)
@@ -221,6 +224,8 @@ if __name__ == '__main__':
             battery_soc, battery_voltage, battery_power = bsp.data_log()
             pv_voltage, pv_power = vtk.data_log()
 
+            #ac_in_power = battery_power + ac_out_power - pv_power
+
             with conn:
                 c.execute('INSERT INTO data_log Values(?,?,?,?,?,?,?,?,?,?)', (current_datetime, battery_soc,
                                                                               battery_voltage, battery_power,
@@ -243,6 +248,7 @@ if __name__ == '__main__':
         try:
             db2csv(data_log_name)
         except:
+            print('Data recording error')
             pass
         print('Data collection terminated!')
 

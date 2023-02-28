@@ -139,7 +139,7 @@ class EnergyManagement():
         sol = {"PG_UG": x[PG_UG],
                "PL_AC": x[PL_AC],
                "PL_DC": x[PL_DC],
-               "ac_in_power": x[PAC2DC]-x[PDC2AC],
+               "ac_in_power": x[PDC2AC] - x[PAC2DC],
                "PDC2AC": x[PDC2AC],
                "pv_power": x[PG_PV],
                "PB_DC": x[PB_DC],

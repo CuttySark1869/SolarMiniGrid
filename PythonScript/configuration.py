@@ -6,7 +6,7 @@
 ctrl_mode = 1
 port_name = 'COM5'  # the port name can be find in device manager
 ems_signal_name = 'ems_log'
-data_log_name = 'data_log'
+data_log_name = 'online_data_log'
 verbose = 3
 src_addr = 1
 rcc_addr = 500  # Xcom-232i = RCC

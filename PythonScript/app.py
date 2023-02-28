@@ -11,7 +11,7 @@ import Control as ctr
 from energy_management_systems import EnergyManagement
 
 from configuration import port_name, PPV_MAX, data_log_name
-from db2csv import db2csv
+from db2csv_online import db2csv
 
 from random import random
 
@@ -36,10 +36,7 @@ c.execute("""CREATE TABLE IF NOT EXISTS data_log(
                 ac_in_voltage real,
                 ac_in_power real,
                 ac_out_voltage real,
-                ac_out_power real,
-                pv_power_ems real,
-                ac_in_power_ems real,
-                pv_power_forecasting real
+                ac_out_power real
               )""")
 
 for i in range(5):
@@ -75,15 +72,22 @@ for i in range(5):
     # (7) Dispatch the real-time control demand
     vtk.charge_set_current(sol["pv_power"] / scada_data["bat_voltage"])  # PV group
     xtm.charge_set_current(sol["ac_in_power"] / scada_data["bat_voltage"])  # AC to DC group
+    
+    time.sleep(10)
+    bat_soc, bat_voltage, bat_power = bsp.data_log()
+    ac_in_voltage, ac_in_power, ac_out_voltage, ac_out_power = xtm.data_log()
+    pv_voltage, pv_power = vtk.data_log()
+
+    #ac_in_power = str(float(bat_power) + float(ac_out_power) - float(pv_power))
+
     # For test purpose
     with conn:
-        c.execute('INSERT INTO data_log Values(?,?,?,?,?,?,?,?,?,?,?,?,?)', (current_datetime, bat_soc,
+        c.execute('INSERT INTO data_log Values(?,?,?,?,?,?,?,?,?,?)', (current_datetime, bat_soc,
                                                                            bat_voltage, bat_power,
                                                                            pv_voltage, pv_power, ac_in_voltage,
                                                                            ac_in_power, ac_out_voltage,
-                                                                           ac_out_power, sol["pv_power"],
-                                                                           sol["ac_in_power"],forecasting_data["pv_power"]))
-    time.sleep(10)
+                                                                           ac_out_power))
+    # time.sleep(10)
 
 # (8) Close the connection
 xtm.close()
