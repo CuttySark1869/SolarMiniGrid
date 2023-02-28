@@ -1,6 +1,7 @@
 """
  Main function for the real-time control and optimization
 """
+import datetime
 import time
 
 # from apscheduler.schedulers.blocking import BlockingScheduler  # Time scheduler
@@ -23,14 +24,32 @@ bsp = ctr.bsp_target(port_name, 1)  # Battery group
 xtm = ctr.xtm_target(port_name, 1)  # BIC group
 xtm.open()  # The automatic control of BIC control
 
+conn = sqlite3.connect(data_log_name + '.db')
+c = conn.cursor()
+c.execute("""CREATE TABLE IF NOT EXISTS data_log(
+                sample_time text,
+                battery_SOC real,
+                battery_voltage real,
+                battery_power real,
+                pv_voltage real,
+                pv_power real,
+                ac_in_voltage real,
+                ac_in_power real,
+                ac_out_voltage real,
+                ac_out_power real
+                pv_power_ems real
+                ac_in_power_ems real
+              )""")
+
 for i in range(10):
     # (2) raw data collection
+    current_datetime = datetime.datetime.now()
     bat_soc, bat_voltage, bat_power = bsp.data_log()
     ac_in_voltage, ac_in_power, ac_out_voltage, ac_out_power = xtm.data_log()
     pv_voltage, pv_power = vtk.data_log()
 
     # (3) SCADA information
-    scada_data = {"SOC": float(bat_soc)/100,
+    scada_data = {"SOC": float(bat_soc) / 100,
                   "PL_AC": float(ac_out_power),
                   "PL_DC": float(pv_power) + float(ac_in_power) - float(ac_out_power) - float(bat_power),
                   "PV_OUTPUT": float(pv_power),
@@ -44,7 +63,7 @@ for i in range(10):
     # (4) Forecasting information
     forecasting_data = {"pv_power": PPV_MAX * random(),
                         "PL_DC": scada_data["PL_DC"],
-                        "PL_AC": scada_data["PL_AC"] }
+                        "PL_AC": scada_data["PL_AC"]}
     # (5) Formulate the energy management problem
     prob = energy_management_system.problem_formulation(scada_data, forecasting_data)
     # (6) Solve the energy management problem
@@ -53,9 +72,17 @@ for i in range(10):
     vtk.charge_set_current(sol["pv_power"] / scada_data["pv_voltage"])  # PV group
     xtm.charge_set_current(sol["ac_in_power"] / scada_data["ac_in_voltage"])  # AC to DC group
     # For test purpose
+    with conn:
+        c.execute('INSERT INTO data_log Values(?,?,?,?,?,?,?,?,?,?,?,?)', (current_datetime, bat_soc,
+                                                                           bat_voltage, bat_power,
+                                                                           pv_voltage, pv_power, ac_in_voltage,
+                                                                           ac_in_power, ac_out_voltage,
+                                                                           ac_out_power, sol["pv_power"],
+                                                                           sol["ac_in_power"]))
     time.sleep(10)
 
 # (8) Close the connection
 xtm.close()
 # (9) Save the results
 db2csv(data_log_name)
+conn.close()
