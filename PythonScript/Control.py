@@ -176,7 +176,7 @@ if __name__ == '__main__':
     port_name = 'COM5'  # the port name can be find in device manager
     ems_signal_name = 'ems_log'
     data_log_name = 'data_log'
-    sampling_time = 5  # in seconds
+    sampling_time = 2  # in seconds
     
     vtk = vtk_target(port_name, 1)
     xtm = xtm_target(port_name, 1)
