@@ -1,6 +1,7 @@
 """
  Main function for the real-time control and optimization
 """
+import time
 
 from apscheduler.schedulers.blocking import BlockingScheduler  # Time scheduler
 
@@ -45,7 +46,10 @@ for i in range(10):
     # (7) Dispatch the real-time control demand
     vtk.charge_set_current(sol["pv_power"] / scada_data["pv_voltage"])  # PV group
     xtm.charge_set_current(sol["ac_in_power"] / scada_data["ac_in_voltage"])  # AC to DC group
-# (7) Close the connection
+    # For test purpose
+    time.sleep(10)
+
+# (8) Close the connection
 xtm.close()
-# (8) Save the results
+# (9) Save the results
 db2csv(data_log_name)
