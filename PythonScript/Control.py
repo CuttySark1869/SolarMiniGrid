@@ -25,10 +25,12 @@ parameter_object_ram_property_id = 13  # stored in ram
 
 verbose = 3
 src_addr = 1
-rcc_addr = 500  # Xcom-232i = RCC
+rcc_addr = 500    # Xcom-232i = RCC
 bsp_addr = 600
 xtm_addr = 100
 vtk_addr = 300
+
+max_current = 20.0  # in watt
 
 class bsp_target:
     def __init__(self, port_name, door_num):
@@ -64,7 +66,7 @@ class vtk_target:
 
     # Set the battery charging current (A) from from solar (pv generator)
     def charge_set_current(self, current):
-        self.setting.write(10002, max(min(current,10),0), 'FLOAT')
+        self.setting.write(10002, max(min(float(current),max_current),0.0), 'FLOAT')
 
     # Get measurement from variotrack device (dc-dc converter)
     # pv_power in W, pv_voltage in V
@@ -108,7 +110,7 @@ class xtm_target:
     # Set the inverter output voltage (V) in stand alone mode
     def ac_set_voltage_out(self, volt):
         self.__transfer_relay_disable()
-        self.setting.write(1286, max(min(volt,240),0), 'FLOAT')
+        self.setting.write(1286, max(min(volt,240.0),0.0), 'FLOAT')
 
     # Set the battery charging current (A, 24V) from from grid (ac generator)
     def charge_set_current(self, current):
@@ -116,17 +118,19 @@ class xtm_target:
         if current > 0:
             self.__grid_feeding_set_current(0)
             self.__grid_feeding_control(0)
-            self.__charge_set_current(max(min(current,20),0))
+            self.__charge_set_current(max(min(float(current),max_current),0.0))
         else:
             self.__charge_set_current(0)
             self.__grid_feeding_control(1)
-            self.__grid_feeding_set_current(max(min(-current*24/240,2),0))
+            current = -float(current)
+            current = max(min(current,max_current),0)
+            self.__grid_feeding_set_current(current * 24.0/240.0)
 
     # def disable_watchdog(self):
     #     self.setting_flash.write(1628, 0, 'BOOL')  # disable watch dog
 
     def __charge_set_current(self, current):
-        self.setting.write(1138, max(min(current,10),0), 'FLOAT')
+        self.setting.write(1138, current, 'FLOAT')
 
     def __grid_feeding_set_current(self, current):
         self.setting.write(1523, current, 'FLOAT')
