@@ -54,5 +54,5 @@ eff_d2a = 0.95
 
 ## Cost group
 VOLL = 1e4 # The load shedding cost
-Gen_cost = 1e1
+GEN_cost = 1e1
 LCOE_Battery = 1e-1

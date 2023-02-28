@@ -3,7 +3,7 @@
 """
 import time
 
-from apscheduler.schedulers.blocking import BlockingScheduler  # Time scheduler
+# from apscheduler.schedulers.blocking import BlockingScheduler  # Time scheduler
 
 import Control as ctr
 
@@ -30,15 +30,21 @@ for i in range(10):
     pv_voltage, pv_power = vtk.data_log()
 
     # (3) SCADA information
-    scada_data = {"battery_soc": bat_soc,
-                  "PL_AC": ac_out_power,
-                  "PL_DC": pv_power + ac_in_power - ac_out_power - bat_power,
-                  "PV_OUTPUT": pv_power,
-                  "pv_voltage": pv_voltage,
-                  "ac_in_voltage": ac_in_voltage,
+    scada_data = {"SOC": float(bat_soc)/100,
+                  "PL_AC": float(ac_out_power),
+                  "PL_DC": float(pv_power) + float(ac_in_power) - float(ac_out_power) - float(bat_power),
+                  "PV_OUTPUT": float(pv_power),
+                  "pv_voltage": float(pv_voltage),
+                  "ac_in_voltage": float(ac_in_voltage),
                   }
+    scada_data["PL_DC"] = scada_data["PL_DC"] + scada_data["PL_AC"]
+    scada_data["PL_AC"] = 0
+
+    print(scada_data)
     # (4) Forecasting information
-    forecasting_data = {"pv_power": PPV_MAX * random()}
+    forecasting_data = {"pv_power": PPV_MAX * random(),
+                        "PL_DC": scada_data["PL_DC"],
+                        "PL_AC": scada_data["PL_AC"] }
     # (5) Formulate the energy management problem
     prob = energy_management_system.problem_formulation(scada_data, forecasting_data)
     # (6) Solve the energy management problem

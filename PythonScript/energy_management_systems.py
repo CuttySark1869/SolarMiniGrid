@@ -14,7 +14,7 @@ from configuration import data_log_name
 from configuration import PG_UG, PL_AC, PL_DC, PAC2DC, PDC2AC, PG_PV, PB_DC, PB_CH, \
     ESS_SOC, SOC_MIN, SOC_MAX, PUG_MAX, PBIC_MAX, ECAP, PPV_MAX, PB_MAX, eff_dc, eff_ch, eff_a2d, eff_d2a
 
-
+from configuration import LCOE_Battery, GEN_cost, VOLL 
 class EnergyManagement():
 
     def __int__(self, data_log_name):
@@ -108,7 +108,13 @@ class EnergyManagement():
         beq = vstack([beq, beq_temp])
         # Limit the energy status
         Aeq_temp = zeros((1, nx))
-        beq_temp = scada["SOC"]
+        if scada["SOC"] > SOC_MAX:
+            beq_temp = SOC_MAX
+        elif scada["SOC"] < SOC_MIN:
+            beq_temp = SOC_MIN
+        else:
+            beq_temp = scada["SOC"]
+
         Aeq_temp[0, ESS_SOC] = 1
         Aeq_temp[0, PB_DC] = 1 / eff_dc / ECAP
         Aeq_temp[0, PB_CH] = -eff_ch / ECAP
