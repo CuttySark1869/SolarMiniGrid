@@ -35,17 +35,24 @@ PB_DC = 6  # Battery discharging rate
 PB_CH = 7  # Battery discharging rate
 ESS_SOC = 8  # Energy status of the battery
 
+
+## Technical limitations
 ECAP = 38 * 24
 SOC_MAX = 0.8
 SOC_MIN = 0.2
-
 PUG_MAX = 1000
 PBIC_MAX = 1000
 PDCDC_MAX = 1000
 PPV_MAX = 1000
 PB_MAX = 500
 
+## Efficiency group
 eff_dc = 0.95
 eff_ch = 0.95
 eff_a2d = 0.95
 eff_d2a = 0.95
+
+## Cost group
+VOLL = 1e4 # The load shedding cost
+Gen_cost = 1e1
+LCOE_Battery = 1e-1

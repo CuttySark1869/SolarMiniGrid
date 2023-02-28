@@ -16,6 +16,7 @@ from configuration import PG_UG, PL_AC, PL_DC, PAC2DC, PDC2AC, PG_PV, PB_DC, PB_
 
 
 class EnergyManagement():
+
     def __int__(self, data_log_name):
         """
         Initial the energy management class with parameter
@@ -42,7 +43,7 @@ class EnergyManagement():
 
         return status
 
-    def problem_formulation(self, status):
+    def problem_formulation(self, scada, forecasting_data):
         """
         Minimize the pv output shedding
         :return:
@@ -57,7 +58,7 @@ class EnergyManagement():
         cobj[PG_UG] = 10
         # AC load shedding
         lb[PL_AC] = 0
-        ub[PL_AC] = status["PL_AC"]
+        ub[PL_AC] = forecasting_data["PL_AC"]
         cobj[PL_AC] = 1e4
         # AC to DC conversion part
         lb[PAC2DC] = 0
@@ -69,7 +70,7 @@ class EnergyManagement():
         cobj[PDC2AC] = 0
         # DC load shedding
         lb[PL_DC] = 0
-        ub[PL_DC] = status["PL_DC"]
+        ub[PL_DC] = forecasting_data["PL_DC"]
         cobj[PL_DC] = 1e4
         # PV output part
         lb[PG_PV] = 0
@@ -89,14 +90,14 @@ class EnergyManagement():
         cobj[ESS_SOC] = 0
         # Formulate the power balance constraint (AC bus)
         Aeq = zeros((1, nx))
-        beq = ones((1, 1)) * data["PL_AC"]
+        beq = ones((1, 1)) * forecasting_data["PL_AC"]
         Aeq[0, PG_UG] = 1
         Aeq[0, PL_AC] = 1
         Aeq[0, PAC2DC] = -1
         Aeq[0, PDC2AC] = eff_d2a
         # Formulate the power balance constraint (DC bus)
         Aeq_temp = zeros((1, nx))
-        beq_temp = ones((1, 1)) * data["PL_DC"]
+        beq_temp = ones((1, 1)) * forecasting_data["PL_DC"]
         Aeq_temp[0, PAC2DC] = eff_a2d
         Aeq_temp[0, PDC2AC] = -1
         Aeq_temp[0, PB_CH] = -1
@@ -107,7 +108,7 @@ class EnergyManagement():
         beq = vstack([beq, beq_temp])
         # Limit the energy status
         Aeq_temp = zeros((1, nx))
-        beq_temp = data["SOC"]
+        beq_temp = scada["SOC"]
         Aeq_temp[0, ESS_SOC] = 1
         Aeq_temp[0, PB_DC] = 1 / eff_dc / ECAP
         Aeq_temp[0, PB_CH] = -eff_ch / ECAP
@@ -132,9 +133,9 @@ class EnergyManagement():
         sol = {"PG_UG": x[PG_UG],
                "PL_AC": x[PL_AC],
                "PL_DC": x[PL_DC],
-               "PAC2DC": x[PAC2DC],
+               "ac_in_power": x[PAC2DC],
                "PDC2AC": x[PDC2AC],
-               "PG_PV": x[PG_PV],
+               "pv_power": x[PG_PV],
                "PB_DC": x[PB_DC],
                "PB_CH": x[PB_CH],
                "ESS_SOC": x[ESS_SOC],
@@ -147,6 +148,9 @@ if __name__ == '__main__':
     energy_management_system = EnergyManagement()
     energy_management_system.__int__(data_log_name)
     data = energy_management_system.statue_update()
-    prob = energy_management_system.problem_formulation(data)
+    forecasting_data = {"PL_AC": 0,
+                        "PL_DC": 300,
+                        "PG_PV": 200, }
+    prob = energy_management_system.problem_formulation(data, forecasting_data)
     sol = energy_management_system.solution_method(prob)
     print(sol)
