@@ -10,9 +10,6 @@ vtk.charge_set_current(10)
 
 time.sleep(2)
 
-ctr.port_name = 2
-
-
 pv_voltage, pv_power = vtk.data_log()
 bat_soc,bat_voltage,bat_power = bsp.data_log()
 
