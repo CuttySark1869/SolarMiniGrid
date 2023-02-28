@@ -98,12 +98,12 @@ class xtm_target:
     # Get measurement from xtender device (inverter)
     def data_log(self):
         ac_in_voltage = self.info.read(3012, 'FLOAT')
-        ac_in_power = self.info.read(3013, 'FLOAT')
+        ac_in_power = self.info.read(3137, 'FLOAT')
         ac_out_voltage = self.info.read(3021, 'FLOAT')
         ac_out_power = self.info.read(3136, 'FLOAT')
-        ac_in_power = str(float(ac_in_power)*1000)
-        ac_out_power = str(float(ac_out_power)*1000)
-        return (ac_in_voltage, ac_in_power, ac_out_voltage, ac_out_power)
+        ac_out_power = float(ac_out_power)*1000
+        ac_in_power = float(ac_in_power)*1000 - ac_out_power        
+        return (ac_in_voltage, str(ac_in_power), ac_out_voltage, str(ac_out_power))
     
     # Set the inverter output voltage (V) in stand alone mode
     def ac_set_voltage_out(self, volt):

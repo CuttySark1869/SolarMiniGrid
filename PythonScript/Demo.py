@@ -16,21 +16,23 @@ print('Battery Voltage = ' + bat_voltage + 'V')
 print('Battery Power = ' + bat_power + 'W')
 
 xtm.open()
-xtm.charge_set_current(5)
+xtm.charge_set_current(2)
 time.sleep(10)
 ac_in_voltage, ac_in_power, ac_out_voltage, ac_out_power = xtm.data_log()
 print('ac_in_power = ' + ac_in_power + 'W')
 print('ac_out_power = ' + ac_out_power + 'W')
 
-xtm.charge_set_current(-10)
+xtm.charge_set_current(-5)
 time.sleep(10)
 ac_in_voltage, ac_in_power, ac_out_voltage, ac_out_power = xtm.data_log()
 print('ac_in_power = ' + ac_in_power + 'W')
 print('ac_out_power = ' + ac_out_power + 'W')
 
-xtm.ac_set_voltage_out(100)
-
-time.sleep(10)
+# xtm.ac_set_voltage_out(100)
+# time.sleep(10)
+# ac_in_voltage, ac_in_power, ac_out_voltage, ac_out_power = xtm.data_log()
+# print('ac_in_power = ' + ac_in_power + 'W')
+# print('ac_out_power = ' + ac_out_power + 'W')
 
 
 xtm.close()
