@@ -9,7 +9,7 @@ def db2csv(name):
     data_log = pd.read_sql_query('SELECT * FROM data_log', conn)
     conn.close()
 
-    columns_names = ['DateTime', 'battery_soc', 'battery_voltage', 'battery_power', 'pv_voltage', 'pv_power', 'ac_in_voltage', 'ac_in_power', 'ac_out_voltage', 'ac_out_power']
+    columns_names = ['DateTime', 'battery_soc', 'battery_voltage', 'battery_power', 'pv_voltage', 'pv_power', 'ac_in_voltage', 'ac_in_power', 'ac_out_voltage', 'ac_out_power', 'pv_power_ems', 'ac_in_power_ems','pv_power_forecasting']
     data_log.columns = columns_names
 
     data_log.to_csv(csv_file, index=None)

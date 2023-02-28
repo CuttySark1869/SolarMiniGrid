@@ -74,7 +74,7 @@ class EnergyManagement():
         cobj[PL_DC] = 1e4
         # PV output part
         lb[PG_PV] = 0
-        ub[PG_PV] = PPV_MAX
+        ub[PG_PV] = forecasting_data["pv_power"]
         cobj[PG_PV] = 0
         # Battery part
         lb[PB_DC] = 0
@@ -139,7 +139,7 @@ class EnergyManagement():
         sol = {"PG_UG": x[PG_UG],
                "PL_AC": x[PL_AC],
                "PL_DC": x[PL_DC],
-               "ac_in_power": x[PAC2DC],
+               "ac_in_power": x[PAC2DC]-x[PDC2AC],
                "PDC2AC": x[PDC2AC],
                "pv_power": x[PG_PV],
                "PB_DC": x[PB_DC],
