@@ -23,6 +23,13 @@ parameter_object_object_type = 2
 parameter_object_flash_property_id = 5  # stored in flash
 parameter_object_ram_property_id = 13  # stored in ram
 
+verbose = 3
+src_addr = 1
+rcc_addr = 500  # Xcom-232i = RCC
+bsp_addr = 600
+xtm_addr = 100
+vtk_addr = 300
+
 class bsp_target:
     def __init__(self, port_name, door_num):
         self.door_num = door_num
@@ -38,7 +45,6 @@ class bsp_target:
         # bat_current = self.info.read(7001, 'FLOAT')
         bat_soc = self.info.read(7002, 'FLOAT')
         bat_power = self.info.read(7003, 'FLOAT')
-        bat_power = str(float(bat_power)/1000)
         return (bat_soc, bat_voltage, bat_power)
     
     # def calibrate(self):
@@ -110,11 +116,11 @@ class xtm_target:
         if current > 0:
             self.__grid_feeding_set_current(0)
             self.__grid_feeding_control(0)
-            self.__charge_set_current(max(min(current,10),0))
+            self.__charge_set_current(max(min(current,20),0))
         else:
-            xtm.__charge_set_current(0)
-            xtm.__grid_feeding_control(1)
-            xtm.__grid_feeding_set_current(max(min(-current*24/240,10),0))
+            self.__charge_set_current(0)
+            self.__grid_feeding_control(1)
+            self.__grid_feeding_set_current(max(min(-current*24/240,2),0))
 
     # def disable_watchdog(self):
     #     self.setting_flash.write(1628, 0, 'BOOL')  # disable watch dog
@@ -138,14 +144,14 @@ class xtm_target:
         # To read the time more easily, the function takes the hours as input
         # and do the convertion to minutes within the function.
         Vbat_force_feed = 23.6
-        start_time_in_min = 0
-        end_time_in_min = 1440
+        start_time_in_min = round(0.0*60)
+        end_time_in_min = round(23.9*60)
 
         self.setting.write(1550, 1, 'BOOL')         # save to flash
         self.setting_flash.write(1523, 0, 'FLOAT')
         self.setting_flash.write(1524, Vbat_force_feed, 'FLOAT')
-        self.setting_flash.write(1525, start_time_in_min, 'FLOAT')
-        self.setting_flash.write(1526, end_time_in_min, 'FLOAT')
+        self.setting_flash.write(1525, start_time_in_min, 'INT32')
+        self.setting_flash.write(1526, end_time_in_min, 'INT32')
         self.setting_flash.write(1128, 1, 'BOOL')   # transfer relay allowed
         self.setting_flash.write(1127, 1, 'BOOL')   # grid-feeding allowed
 
@@ -166,15 +172,8 @@ if __name__ == '__main__':
     port_name = 'COM5'  # the port name can be find in device manager
     ems_signal_name = 'ems_log'
     data_log_name = 'data_log'
-    verbose = 3
-    src_addr = 1
-    rcc_addr = 500  # Xcom-232i = RCC
-    bsp_addr = 600
-    xtm_addr = 100
-    vtk_addr = 300
     sampling_time = 5  # in seconds
-    total_steps = 5    # total time = total_steps * sampling_time
-
+    
     vtk = vtk_target(port_name, 1)
     xtm = xtm_target(port_name, 1)
     bsp = bsp_target(port_name, 1)

@@ -56,12 +56,9 @@ class ScomTarget:
         for line in str_output:
           print(line)
       if str_output[-7].decode("utf-8") == 'response:\r\n':
-        raw_data = str_output[-1]
+        raw_data = str_output[-1].decode("utf-8")
         raw_data = raw_data[5:]
-        try:
-          data = int(raw_data)
-        except:
-          data = raw_data
+        data = raw_data
         return data
       else:
         print('Fetching Info Failure')
