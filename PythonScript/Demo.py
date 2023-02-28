@@ -27,6 +27,8 @@ time.sleep(10)
 ac_in_voltage, ac_in_power, ac_out_voltage, ac_out_power = xtm.data_log()
 print('ac_in_power = ' + ac_in_power + 'W')
 print('ac_out_power = ' + ac_out_power + 'W')
+print('ac_in_voltage = ' + ac_in_voltage + 'V')
+print('ac_out_voltage = ' + ac_out_voltage + 'V')
 
 # xtm.ac_set_voltage_out(100)
 # time.sleep(10)

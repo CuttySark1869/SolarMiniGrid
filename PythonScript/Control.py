@@ -99,7 +99,7 @@ class xtm_target:
 
     # Get measurement from xtender device (inverter)
     def data_log(self):
-        ac_in_voltage = self.info.read(3012, 'FLOAT')
+        ac_in_voltage = self.info.read(3011, 'FLOAT')
         ac_in_power = self.info.read(3137, 'FLOAT')
         ac_out_voltage = self.info.read(3021, 'FLOAT')
         ac_out_power = self.info.read(3136, 'FLOAT')
